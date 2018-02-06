@@ -5,16 +5,19 @@ const timerInstance = new Timer();
 let logindata = window.localStorage.getItem('login-data');
 if(logindata)
 {
+    let user = getLocalData().user;
     loadDashboard();
 
+    $(".user-name").html(user.name);
     timerInstance.addEventListener('secondsUpdated', function (e) {
         let s = timerInstance.getTimeValues().toString().split(':');
         s.pop();
         $('.time').html(s.join(":"));
     
         let project = $("#project").val();
-        let user = getLocalData().user;
+
         let identifer = moment().format("YYYYMMDD")+'-'+user.id+'-'+project;
+        console.log(s);
         window.localStorage.setItem(identifer,JSON.stringify(s));
     
     });
@@ -48,10 +51,19 @@ else
         
     });
 
+    $("#email,#password").keyup(function(e){
+        let code = e.keyCode;
+        if(code == 13)
+        {
+            $("#submit").click();
+        }
+    });
 
     $("#logout").click(function(){
         window.localStorage.removeItem('login-data');
         timerInstance.stop();
+        $("#cmn-toggle-4").prop('checked',false);
+        $("#cmn-toggle-4").change();
         $("#dashboard").addClass('hide');
         $("#login").removeClass('hide');
     })
@@ -117,7 +129,6 @@ else
             })
     
             $("#project").html(html);
-    
             $("#login").addClass('hide');
             $("#dashboard").removeClass('hide');
     
