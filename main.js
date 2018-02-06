@@ -14,7 +14,7 @@ let mainWindow
 function createWindow () {
 
 
-  let tray = new Tray('./public/images/logo');
+  let tray = new Tray('./public/images/logo.png');
   const contextMenu = Menu.buildFromTemplate([
     {label: 'quit', type: 'radio'},
   ])
@@ -22,7 +22,7 @@ function createWindow () {
   tray.setContextMenu(contextMenu)
 
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 300, height: 450})
+  mainWindow = new BrowserWindow({width: 300, height: 450,resizable: false})
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
