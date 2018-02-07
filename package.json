@@ -1,21 +1,15 @@
 {
-  "name": "electron-quick-start",
-  "version": "1.0.0",
-  "description": "A minimal Electron application",
+  "name": "cx-work-logger",
+  "version": "0.0.1",
+  "description": "In house codelogicx work logger",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-packager . CxWorkLogger --icon=public/images/linux/64x64.png --platform=linux --arch=x64 --version=0.0.1 --overwrite --out=releases",
+    "deb64": "electron-installer-debian --icon public/images/linux/64x64.png --src releases/CxWorkLogger-linux-x64/ --dest installers/ --arch amd64"
   },
-  "repository": "https://github.com/electron/electron-quick-start",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
-  ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "author": "Riaz Laskar",
+  "license": "MIT",
   "devDependencies": {
     "electron": "~1.7.8"
   },

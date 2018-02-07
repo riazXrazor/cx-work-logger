@@ -1,27 +1,28 @@
 const moment = require('moment');
 const Timer = require('easytimer.js');
 const timerInstance = new Timer();
+const sendToServer = 30*60;
+
+setInterval(function(){
+    if(online())
+    {
+        if($("#connection-status i").hasClass('offline')) $("#connection-status i").removeClass('offline'); 
+        
+        $("#connection-status i").addClass('online')
+    }
+    else
+    {
+        if($("#connection-status i").hasClass('online')) $("#connection-status i").removeClass('online'); 
+        
+        $("#connection-status i").addClass('offline')
+    }
+},1000);
 
 let logindata = window.localStorage.getItem('login-data');
 if(logindata)
 {
-    let user = getLocalData().user;
+
     loadDashboard();
-
-    $(".user-name").html(user.name);
-    timerInstance.addEventListener('secondsUpdated', function (e) {
-        let s = timerInstance.getTimeValues().toString().split(':');
-        s.pop();
-        $('.time').html(s.join(":"));
-    
-        let project = $("#project").val();
-
-        let identifer = moment().format("YYYYMMDD")+'-'+user.id+'-'+project;
-        console.log(s);
-        window.localStorage.setItem(identifer,JSON.stringify(s));
-    
-    });
-
 }
 else
 {
@@ -33,18 +34,52 @@ else
 
         let email = $("#email").val();
         let password = $("#password").val();
+        let txt = $(this).text();
+        let that = $(this);
 
             $.ajax({
                 type: 'POST',
                 url: "https://codelogicx-crm.track-progress.com/api/auth/login",
                 data: {email : email,password: password},
                 dataType: "JSON",
+                beforeSend: function (xhr) {
+                    that.text("Signing...").attr('disabled',true);
+                },
                 success: function(resultData) { 
                     window.localStorage.setItem('login-data',JSON.stringify(resultData.data));
                     loadDashboard();
                  },
                 error: function(e){
-                    alert(e.responseJSON.status.message);
+                    let err = '';
+                    if(e.responseJSON.error_list)
+                    {
+                        if(e.responseJSON.error_list['email'])
+                        {
+                            e.responseJSON.error_list['email'].forEach(function(i){
+                                err += i+"\n";
+                            });
+                        }
+
+                        if(e.responseJSON.error_list['password'])
+                        {
+                            e.responseJSON.error_list['password'].forEach(function(i){
+                                err += i+"\n";
+                            });
+                        }
+                    }
+                    else
+                    {
+                        err = e.responseJSON.status.message
+                    }
+
+
+                    $(".form-signin").notify(err, {
+                        elementPosition : 'top center',
+                        className : 'error'
+                    });
+                },
+                complete : function(){
+                    that.text(txt).attr('disabled',false);
                 }
             })
            
@@ -73,6 +108,9 @@ else
         if($(this).is(":checked"))
         {
             $(".time").removeClass('fade-time');
+            $("#data-project").val($("#project").val());
+            $("#data-desc").val($("#desc").val() || "---");
+
             $("#project").attr('disabled',true);
             $("#desc").attr('disabled',true);
 
@@ -103,6 +141,52 @@ else
     });
  
 
+    function sendDataToServer(data)
+    {
+        let timeLogs = window.localStorage.getItem('timeLogs');
+        if(!timeLogs)
+        {
+            timeLogs = [];
+            timeLogs.push(data);
+            //window.localStorage.setItem('timeLogs',JSON.stringify(timeLogs));
+        }
+        else
+        {
+            timeLogs = JSON.parse(timeLogs);
+            timeLogs.push(data);
+        }
+
+        if(online())
+        {
+            while(timeLogs.length)
+            {
+                //console.log(timeLogs.shift());
+                addWorklog(timeLogs.shift())
+                .done(function(){
+                   
+                })
+                .fail(function(e){
+                    $.notify(e.responseJSON.status.message, "error")
+                })
+                .always(function(){
+                    setTimeout(function(){
+                        $("#sending-status").addClass('hide');
+                    },1000);
+                });
+            }
+            window.localStorage.removeItem('timeLogs');
+        }
+        else
+        {
+            window.localStorage.setItem('timeLogs',JSON.stringify(timeLogs));
+        }
+    }
+
+    function online()
+    {
+        return navigator.onLine;
+    }
+
     function getMe()
     {
         return $.ajax({
@@ -110,6 +194,20 @@ else
                     url: "https://codelogicx-crm.track-progress.com/api/me",
                     dataType: "JSON",
                     beforeSend: function (xhr) {
+                        xhr.setRequestHeader ("Authorization", "Bearer "+getLocalData().access_token);
+                    }
+                })
+    }
+
+    function addWorklog(d)
+    {
+        return $.ajax({
+                    type: 'POST',
+                    url: "https://codelogicx-crm.track-progress.com/api/worklogs/add",
+                    data:d,
+                    dataType: "JSON",
+                    beforeSend: function (xhr) {
+                        $("#sending-status").removeClass('hide');
                         xhr.setRequestHeader ("Authorization", "Bearer "+getLocalData().access_token);
                     }
                 })
@@ -128,12 +226,55 @@ else
                 html += '<option value="'+ item.id +'">'+item.name+'</option>';
             })
     
+            
+            $(".user-name").html(res.data.user.name);
             $("#project").html(html);
             $("#login").addClass('hide');
             $("#dashboard").removeClass('hide');
+
+
+            let user = getLocalData().user;
+            timerInstance.addEventListener('secondsUpdated', function (e) {
+                let s = timerInstance.getTimeValues().toString().split(':');
+                s.pop();
+                $('.time').html(s.join(":"));
+            
+                let project = $("#project").val();
+
+                let identifer = moment().format("YYYYMMDD")+'-'+user.id+'-'+project;
+                //console.log(s);
+                window.localStorage.setItem(identifer,JSON.stringify(s));
+
+                let countVal = window.localStorage.getItem('count-'+identifer);
+                if(!countVal)
+                {
+                    window.localStorage.setItem('count-'+identifer,1)
+                }
+                else
+                {
+                    countVal = parseInt(countVal);
+                    countVal += 1;
+                    if(countVal >= sendToServer)
+                    {
+                        sendDataToServer({
+                            date : moment().format('YYYY-MM-DD'), 
+                            description : $("#data-desc").val(), 
+                            end_time : moment().format('HH:mm'), 
+                            project : $("#data-project").val(), 
+                            start_time : moment().subtract(countVal, 'seconds').format('HH:mm')
+                        })
+                        window.localStorage.removeItem('count-'+identifer);
+                    }
+                    else
+                    {
+                        window.localStorage.setItem('count-'+identifer,countVal);
+                    }
+                }
+            });
+
     
         })
         .catch(function(e){
-            alert(e.responseJSON.status.message);
+            $.notify(e.responseJSON.status.message, "error")
         });
     }
