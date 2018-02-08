@@ -1,4 +1,9 @@
 
+ const setupEvents = require('./winsetupEvents')
+ if (setupEvents.handleSquirrelEvent()) {
+    // squirrel event handled and app will exit in 1000ms, so don't do anything else
+    return;
+ }
  const electron = require('electron')
 // Module to control application life.
 const { app,BrowserWindow, Menu, Tray,ipcMain} = electron;
@@ -32,7 +37,7 @@ function createWindow () {
     width: 300, 
     height: 470,
     resizable: false,
-    icon: path.join(__dirname, 'public/images/linux/64x64.png')
+    icon: path.join(__dirname, 'public/images/1024x1024.png')
   })
 
   // and load the index.html of the app.

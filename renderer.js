@@ -2,7 +2,7 @@ const {ipcRenderer} = require('electron')
 const moment = require('moment');
 const Timer = require('easytimer.js');
 const timerInstance = new Timer();
-const sendToServer = 60;
+const sendToServer = 30*60;
 const projectsList = {};
 
 setInterval(function(){
