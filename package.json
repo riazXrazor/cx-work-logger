@@ -5,13 +5,16 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-packager . CxWorkLogger --icon=public/images/linux/64x64.png --platform=linux --arch=x64 --version=0.0.1 --overwrite --out=releases",
-    "deb64": "electron-installer-debian --icon public/images/linux/64x64.png --src releases/CxWorkLogger-linux-x64/ --dest installers/ --arch amd64"
+    "deb" : "electron-packager . CxWorkLogger --overwrite --asar=true --platform=linux --arch=x64 --icon=public/images/1024x1024.png --prune=true --out=releases",
+    "win" : "electron-packager . CxWorkLogger --overwrite --asar=true --platform=win32 --arch=ia32 --icon=public/images/icon.ico --prune=true --out=releases --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Codelogicx Work Logger\"",
+    "mac" : "electron-packager . CxWorkLogger --overwrite --platform=darwin --arch=x64 --icon=public/images/icon.icns --prune=true --out=releases"
   },
   "author": "Riaz Laskar",
   "license": "MIT",
   "devDependencies": {
-    "electron": "~1.7.8"
+    "electron": "~1.7.8",
+    "electron-debug": "^1.5.0",
+    "electron-reload": "^1.2.2"
   },
   "dependencies": {
     "easytimer.js": "^2.0.3",
