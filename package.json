@@ -1,6 +1,6 @@
 {
   "name": "cx-work-logger",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "In house codelogicx work logger",
   "main": "main.js",
   "scripts": {

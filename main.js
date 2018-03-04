@@ -7,7 +7,7 @@
  const electron = require('electron')
 
 // Module to control application life.
-const { app,BrowserWindow, Menu, Tray,ipcMain,dialog} = electron;
+const { app,BrowserWindow, Menu, Tray,ipcMain,dialog,Notification} = electron;
 
 const path = require('path')
 const url = require('url')
@@ -27,7 +27,7 @@ let template = [
       type: 'info',
       title: "About",
       icon : path.join(__dirname, 'public/images/1024x1024.png'),
-      message : "Author : Riaz Ali Laskar \n\r © "+ moment().format('YYYY')
+      message : "Version : 1.0.0 \n\r Author : Riaz Ali Laskar \n\r © "+ moment().format('YYYY')
     });
   }}
 ]
@@ -121,12 +121,44 @@ app.on('activate', function () {
   })
 
   ipcMain.on('tracker-state', (event, arg) => {
+      
+    if(Notification.isSupported())
+    {
+      let n = new Notification({ icon: path.join(__dirname, 'public/images/1024x1024.png'), title: 'Cx Work Logger', body: arg, sound: path.join(__dirname, 'public/sounds/beep.wav') });
+    n.show();
+    }
+    else
+    {
       eNotify.notify({ title: 'Cx Work Logger', text: arg, sound: path.join(__dirname, 'public/sounds/beep.wav') });
+    }
   })
 
   ipcMain.on('tracker-snapshot', (event, arg) => {
-    eNotify.notify({ title: 'Cx Work Logger', text: "Logging your progress to server", image: path.join(__dirname, 'public/images/time.gif'), sound: path.join(__dirname, 'public/sounds/beep.wav') });
-})
+    
+    if(Notification.isSupported())
+    {
+      let n = new Notification({ icon: path.join(__dirname, 'public/images/1024x1024.png'), title: 'Cx Work Logger', body: "Logging your progress to server", sound: path.join(__dirname, 'public/sounds/beep.wav') });
+      n.show();
+    }
+    else
+    {
+      eNotify.notify({ title: 'Cx Work Logger', text: "Logging your progress to server", image: path.join(__dirname, 'public/images/time.gif'), sound: path.join(__dirname, 'public/sounds/beep.wav') });
+    }
+  })
+
+
+  ipcMain.on('tracker-notify', (event, arg) => {
+    
+    if(Notification.isSupported())
+    {
+      let n = new Notification({ icon: path.join(__dirname, 'public/images/1024x1024.png'), title: 'Cx Work Logger', body: arg, sound: path.join(__dirname, 'public/sounds/beep.wav') });
+      n.show();
+    }
+    else
+    {
+      eNotify.notify({ title: 'Cx Work Logger', text: arg, image: path.join(__dirname, 'public/images/time.gif'), sound: path.join(__dirname, 'public/sounds/beep.wav') });
+    }
+  })
 
   
 

@@ -146,7 +146,8 @@ else
             {
                 timerInstance.start({precision : 'seconds'});
             }
-            $.notify("Tracker On", "success")
+
+            ipcRenderer.send('tracker-notify', "Tracker is running");
         }
         else
         {
@@ -155,7 +156,7 @@ else
             $(".time").addClass('fade-time');
 
             timerInstance.stop();
-            $.notify("Tracker Off", "success")
+            ipcRenderer.send('tracker-notify', "Tracker is off");
         }
 
     });
@@ -198,7 +199,7 @@ else
                     window.localStorage.setItem('lastEntry',JSON.stringify(sd));
                     if(isClosing === true)
                     {
-                        ipcRenderer.sendSync('logout-complet', 'done');
+                        ipcRenderer.send('logout-complet', 'done');
                     }
                 })
                 .fail(function(e){
