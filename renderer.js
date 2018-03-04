@@ -8,22 +8,20 @@ const projectsList = {};
 setInterval(function(){
     if(online())
     {
-        if($("#connection-status i").hasClass('offline')) $("#connection-status i").removeClass('offline'); 
-        
-        $("#connection-status i").addClass('online')
+        if($("#connection-status i").hasClass('offline')) $("#connection-status i").removeClass('offline');         
+            $("#connection-status i").addClass('online')
+
     }
     else
     {
         if($("#connection-status i").hasClass('online')) $("#connection-status i").removeClass('online'); 
-        
-        $("#connection-status i").addClass('offline')
+            $("#connection-status i").addClass('offline')
     }
 
 
-            let sd = window.localStorage.getItem('lastEntry');
+            let sd = getLastEntryData();
                 if(sd && !$.isEmptyObject(projectsList))
                 {
-                    sd = JSON.parse(sd);
                     sd.desc = sd.description.length > 10 ? sd.description.substring(0,10)+'...' : sd.description;
                     sd.project_name = projectsList[sd.project].length > 7 ? projectsList[sd.project].substring(0,7)+'...' : projectsList[sd.project];
                     $(".last-entry").find('.panel-body .tr').html('\
@@ -148,6 +146,7 @@ else
             {
                 timerInstance.start({precision : 'seconds'});
             }
+            $.notify("Tracker On", "success")
         }
         else
         {
@@ -156,6 +155,7 @@ else
             $(".time").addClass('fade-time');
 
             timerInstance.stop();
+            $.notify("Tracker Off", "success")
         }
 
     });
@@ -171,7 +171,7 @@ else
         $("#login").removeClass('hide');
     }
 
-    function sendDataToServer(data)
+    function sendDataToServer(data,isClosing)
     {
         let timeLogs = window.localStorage.getItem('timeLogs');
         if(!timeLogs)
@@ -194,7 +194,12 @@ else
                 let sd = timeLogs.shift();
                 addWorklog(sd)
                 .done(function(){
+                    sd.sentAt = moment().format('YYYY-MM-DD HH:mm');
                     window.localStorage.setItem('lastEntry',JSON.stringify(sd));
+                    if(isClosing === true)
+                    {
+                        ipcRenderer.sendSync('logout-complet', 'done');
+                    }
                 })
                 .fail(function(e){
                     $.notify(e.responseJSON.status.message, "error")
@@ -240,6 +245,7 @@ else
                     beforeSend: function (xhr) {
                         $("#sending-status").removeClass('hide');
                         xhr.setRequestHeader ("Authorization", "Bearer "+getLocalData().access_token);
+                        ipcRenderer.send('tracker-snapshot',d);
                     }
                 })
     }
@@ -247,6 +253,16 @@ else
     function getLocalData()
     {
         return JSON.parse(window.localStorage.getItem('login-data'))
+    }
+
+    function getLastEntryData()
+    {
+        let o = window.localStorage.getItem('lastEntry');
+        if(!o)
+        {
+            return false;
+        }
+        return JSON.parse(o)
     }
 
     function loadDashboard()
@@ -269,7 +285,7 @@ else
             let user = getLocalData().user;
             timerInstance.addEventListener('secondsUpdated', function (e) {
                 let s = timerInstance.getTimeValues().toString().split(':');
-                s.pop();
+                let second = s.pop();
                 $('.time').html(s.join(":"));
             
                 let project = $("#project").val();
@@ -301,6 +317,7 @@ else
                     else
                     {
                         window.localStorage.setItem('count-'+identifer,countVal);
+                        $('.small-time').text(second);
                     }
                 }
 
@@ -315,10 +332,31 @@ else
 
 
     ipcRenderer.on('closing', (event, arg) => {
+        let lastentry = getLastEntryData();
         timerInstance.stop();
         $("#cmn-toggle-4").prop('checked',false);
         $("#cmn-toggle-4").change();
         $("#dashboard").addClass('hide');
         $("#login").removeClass('hide');
-       ipcRenderer.sendSync('logout-complet', 'done')
+        if(!lastentry)
+        {
+            ipcRenderer.sendSync('logout-complet', 'done')
+            return;
+        }
+
+        let now = moment();
+        let then = moment(lastentry.sentAt);
+        let diff = now.diff(then,'minutes');
+        if(diff > 5)
+        {
+            sendDataToServer({
+                date : moment().format('YYYY-MM-DD'), 
+                description : $("#data-desc").val(), 
+                end_time : moment().format('HH:mm'), 
+                project : $("#data-project").val(), 
+                start_time : lastentry.end_time
+            },true)
+        }
+
+       
     })

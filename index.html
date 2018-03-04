@@ -25,7 +25,8 @@
 
                           <div class="row">
                             <div class="col-xs-6">
-                              <span class="time fade-time">00:00</span>
+                              <span class="time fade-time pull-left">00:00</span>
+                              <small class="time fade-time small-time pull-left">00</small>
                             </div>
                             <div class="col-xs-6">
                                 <label for="lname"></label>
@@ -104,13 +105,16 @@
     <!-- Insert this line after script imports -->
     <script>if (window.module) module = window.module;</script>
     <script>
+        const {ipcRenderer} = require('electron')
       // You can also require other files to run in this process
       require('./renderer.js');
 
       $.notify.defaults({ globalPosition:"bottom left" });
 
         const alertOnlineStatus = () => {
-            navigator.onLine ? $.notify("Online", "success") : $.notify("Offline", "error")
+            
+                ipcRenderer.send('tracker-state', navigator.onLine ? "Tracker is online" : "Tracker is running in offline mode")
+            
         }
 
         window.addEventListener('online',  alertOnlineStatus)

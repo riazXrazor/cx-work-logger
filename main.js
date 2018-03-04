@@ -5,24 +5,42 @@
     return;
  }
  const electron = require('electron')
+
 // Module to control application life.
-const { app,BrowserWindow, Menu, Tray,ipcMain} = electron;
+const { app,BrowserWindow, Menu, Tray,ipcMain,dialog} = electron;
 
 const path = require('path')
 const url = require('url')
+const moment = require('moment');
 // require('electron-debug')({showDevTools: true});
 // require('electron-reload')(__dirname);
+var eNotify;
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
 let template = [
-  { role: 'quit' }
+  { role: 'quit' },
+  {label: 'about', click() { 
+    dialog.showMessageBox({
+      type: 'info',
+      title: "About",
+      icon : path.join(__dirname, 'public/images/1024x1024.png'),
+      message : "Author : Riaz Ali Laskar \n\r © "+ moment().format('YYYY')
+    });
+  }}
 ]
 
 const menu = Menu.buildFromTemplate(template)
 
 function createWindow () {
+  eNotify = require('electron-notify');
+  // Change config options
+  eNotify.setConfig({
+    appIcon: path.join(__dirname, 'public/images/1024x1024.png'),
+    displayTime: 6000
+  });
 
   Menu.setApplicationMenu(menu)
   // let tray = new Tray('./public/images/logo.png');
@@ -101,4 +119,14 @@ app.on('activate', function () {
     mainWindow = null;
     app.quit();
   })
+
+  ipcMain.on('tracker-state', (event, arg) => {
+      eNotify.notify({ title: 'Cx Work Logger', text: arg, sound: path.join(__dirname, 'public/sounds/beep.wav') });
+  })
+
+  ipcMain.on('tracker-snapshot', (event, arg) => {
+    eNotify.notify({ title: 'Cx Work Logger', text: "Logging your progress to server", image: path.join(__dirname, 'public/images/time.gif'), sound: path.join(__dirname, 'public/sounds/beep.wav') });
+})
+
+  
 
