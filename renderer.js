@@ -274,6 +274,7 @@ else
                 html += '<option value="'+ item.id +'">'+item.name+'</option>';
                 projectsList[item.id] = item.name;
             })
+            
     
             
             $(".user-name").html(res.data.user.name);
@@ -328,6 +329,7 @@ else
         })
         .catch(function(e){
             $.notify(e.responseJSON.status.message, "error")
+            logout();
         });
     }
 
