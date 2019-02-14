@@ -9,7 +9,7 @@ To clone and run this repository you'll need [Git](https://git-scm.com) and [Nod
 
 ```bash
 # Clone this repository
-git clone https://github.com/electron/cx-work-logger
+git clone https://github.com/riazXrazor/cx-work-logger
 # Go into the repository
 cd cx-work-logger
 # Install dependencies
